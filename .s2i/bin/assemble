@@ -1,0 +1,26 @@
+#!/bin/bash
+
+set -x
+
+set -eo pipefail
+
+# Execute original assemble script.
+
+/opt/app-root/builder/assemble
+
+cd /tmp
+curl -o /tmp/julia.tar.gz https://julialang-s3.julialang.org/bin/linux/x64/1.0/julia-$JULIA_VERSION-linux-x86_64.tar.gz
+tar xzf julia.tar.gz
+cp -R /tmp/julia-$JULIA_VERSION/* /opt/app-root/
+rm -rf /tmp/julia.tar.gz /tmp/julia-$JULIA_VERSION
+cd -
+julia -e '
+using Pkg
+Pkg.add("IJulia")
+'
+cp -R .local/share/jupyter/kernels/* /opt/app-root/share/jupyter/kernels/
+
+
+# Fix up permissions.
+
+fix-permissions /opt/app-root
